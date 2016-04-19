@@ -54,51 +54,49 @@ func main() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt)
 
-	go func() {
-		for {
-			select {
-			case <-s:
-				fmt.Println("shutting down")
-				return
-			default:
-				// modbus uses 16bit registers. Results is a slice of uint8. Every two
-				// registers need to be combined into a uint16 value for their real
-				// value.
-				//
-				// Get value for Adc_vb_f
-				hb := results[0]
-				lb := results[1]
-				b := uint16(uint16(hb)<<8 | uint16(lb))
-				v := float64(b) * conv
-				c.Gauge("adcvbf", v)
-				//fmt.Printf("Adc_vb_f=%f\n", v)
+	for {
+		select {
+		case <-s:
+			fmt.Println("shutting down")
+			return
+		default:
+			// modbus uses 16bit registers. Results is a slice of uint8. Every two
+			// registers need to be combined into a uint16 value for their real
+			// value.
+			//
+			// Get value for Adc_vb_f
+			hb := results[0]
+			lb := results[1]
+			b := uint16(uint16(hb)<<8 | uint16(lb))
+			v := float64(b) * conv
+			c.Gauge("adcvbf", v)
+			//fmt.Printf("Adc_vb_f=%f\n", v)
 
-				// Get value for Adc_va_f
-				hb = results[2]
-				lb = results[3]
-				b = uint16(uint16(hb)<<8 | uint16(lb))
-				v = float64(b) * conv
-				c.Gauge("adcvaf", v)
-				//fmt.Printf("Adc_va_f=%f\n", v)
+			// Get value for Adc_va_f
+			hb = results[2]
+			lb = results[3]
+			b = uint16(uint16(hb)<<8 | uint16(lb))
+			v = float64(b) * conv
+			c.Gauge("adcvaf", v)
+			//fmt.Printf("Adc_va_f=%f\n", v)
 
-				// Get value for Ahc_daily
-				hb = results[74]
-				lb = results[75]
-				b = uint16(uint16(hb)<<8 | uint16(lb))
-				v = float64(b) * 0.1
-				c.Gauge("ahcdaily", v)
-				//fmt.Printf("Ahc_daily=%f\n", v)
+			// Get value for Ahc_daily
+			hb = results[74]
+			lb = results[75]
+			b = uint16(uint16(hb)<<8 | uint16(lb))
+			v = float64(b) * 0.1
+			c.Gauge("ahcdaily", v)
+			//fmt.Printf("Ahc_daily=%f\n", v)
 
-				// Get value for Ahl_daily
-				hb = results[76]
-				lb = results[77]
-				b = uint16(uint16(hb)<<8 | uint16(lb))
-				v = float64(b) * 0.1
-				c.Gauge("ahldaily", v)
-				//fmt.Printf("Ahl_daily=%f\n", v)
-			}
-
-			time.Sleep(5 * time.Second)
+			// Get value for Ahl_daily
+			hb = results[76]
+			lb = results[77]
+			b = uint16(uint16(hb)<<8 | uint16(lb))
+			v = float64(b) * 0.1
+			c.Gauge("ahldaily", v)
+			//fmt.Printf("Ahl_daily=%f\n", v)
 		}
-	}()
+
+		time.Sleep(5 * time.Second)
+	}
 }
