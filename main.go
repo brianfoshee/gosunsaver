@@ -42,12 +42,6 @@ func main() {
 
 	client := modbus.NewClient(handler)
 
-	results, err := client.ReadHoldingRegisters(8, 44)
-	if err != nil {
-		fmt.Println("error reading registers:", err)
-		return
-	}
-
 	fb := 32768.0
 	conv := 100.0 / fb
 
@@ -60,6 +54,11 @@ func main() {
 			fmt.Println("shutting down")
 			return
 		default:
+			results, err := client.ReadHoldingRegisters(8, 44)
+			if err != nil {
+				fmt.Println("error reading registers:", err)
+				return
+			}
 			// modbus uses 16bit registers. Results is a slice of uint8. Every two
 			// registers need to be combined into a uint16 value for their real
 			// value.
