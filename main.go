@@ -1,15 +1,29 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/alexcesaro/statsd"
 	"github.com/goburrow/modbus"
-	//"github.com/alexcesaro/statsd"
 )
 
 func main() {
+	server := flag.String("statsd-server", "", "statsd UDP server")
+	flag.Parse()
+
+	c, err := statsd.New(
+		statsd.Address(*server),
+		statsd.Prefix("solar"),
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer c.Close()
+
 	handler := modbus.NewRTUClientHandler("/dev/ttyUSB0")
 	handler.BaudRate = 9600
 	handler.DataBits = 8
@@ -44,23 +58,28 @@ func main() {
 	hb := results[0]
 	lb := results[1]
 	b := uint16(uint16(hb)<<8 | uint16(lb))
+	c.Gauge("adcvbf", b)
 	fmt.Printf("Adc_vb_f=%f\n", float64(b)*conv)
 
 	// Get value for Adc_va_f
 	hb = results[2]
 	lb = results[3]
 	b = uint16(uint16(hb)<<8 | uint16(lb))
+	c.Gauge("adcvaf", b)
 	fmt.Printf("Adc_va_f=%f\n", float64(b)*conv)
 
 	// Get value for Ahc_daily
 	hb = results[74]
 	lb = results[75]
 	b = uint16(uint16(hb)<<8 | uint16(lb))
+	c.Gauge("ahcdaily", b)
 	fmt.Printf("Ahc_daily=%f\n", float64(b)*0.1)
 
 	// Get value for Ahl_daily
 	hb = results[76]
 	lb = results[77]
 	b = uint16(uint16(hb)<<8 | uint16(lb))
+	c.Gauge("ahldaily", b)
 	fmt.Printf("Ahl_daily=%f\n", float64(b)*0.1)
+
 }
