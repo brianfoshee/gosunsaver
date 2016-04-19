@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/goburrow/modbus"
+	//"github.com/alexcesaro/statsd"
 )
 
 func main() {
@@ -18,7 +20,7 @@ func main() {
 
 	if err := handler.Connect(); err != nil {
 		fmt.Println("error conecting: ", err)
-		return
+		os.Exit(1)
 	}
 
 	defer handler.Close()
@@ -35,11 +37,30 @@ func main() {
 	conv := 100.0 / fb
 
 	// modbus uses 16bit registers. Results is a slice of uint8. Every two
-	// registers need to be combined into a uint16 number for their real
+	// registers need to be combined into a uint16 value for their real
 	// value.
+	//
+	// Get value for Adc_vb_f
 	hb := results[0]
 	lb := results[1]
 	b := uint16(uint16(hb)<<8 | uint16(lb))
-
 	fmt.Printf("Adc_vb_f=%f\n", float64(b)*conv)
+
+	// Get value for Adc_va_f
+	hb = results[2]
+	lb = results[3]
+	b = uint16(uint16(hb)<<8 | uint16(lb))
+	fmt.Printf("Adc_va_f=%f\n", float64(b)*conv)
+
+	// Get value for Ahc_daily
+	hb = results[74]
+	lb = results[75]
+	b = uint16(uint16(hb)<<8 | uint16(lb))
+	fmt.Printf("Ahc_daily=%f\n", float64(b)*0.1)
+
+	// Get value for Ahl_daily
+	hb = results[76]
+	lb = results[77]
+	b = uint16(uint16(hb)<<8 | uint16(lb))
+	fmt.Printf("Ahl_daily=%f\n", float64(b)*0.1)
 }
